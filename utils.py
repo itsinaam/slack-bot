@@ -129,14 +129,21 @@ async def run_chatbot(text: str,) -> str:
 
     return response.content
 
-async def download_file(file_url: str, file_name: str):
+async def download_file(file_url: str, file_name: str) -> str:
     headers = {"Authorization": f"Bearer {SLACK_BOT_TOKEN}"}
+
+    # Ensure /tmp exists
+    tmp_dir = "/tmp"
+    os.makedirs(tmp_dir, exist_ok=True)
+
+    save_path = os.path.join(tmp_dir, file_name)
+
     async with aiohttp.ClientSession() as session:
         async with session.get(file_url, headers=headers) as resp:
             if resp.status == 200:
-                with open(file_name, "wb") as f:
+                with open(save_path, "wb") as f:
                     f.write(await resp.read())
-                return file_name
+                return save_path
             else:
                 print(f"⚠️ Failed to download file {file_url}, status={resp.status}")
                 return None
@@ -197,6 +204,7 @@ async def dm_by_email(email: str, text: str):
         await client.chat_postMessage(channel=channel_id, text=text)
     except SlackApiError as e:
         print("Slack error:", e.response.get("error"))
+
 
 
 

@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]   # for running FastAPI
+pytz
+apscheduler
+slack_sdk
+langchain-core
+langchain-openai
+python-dotenv
+aiohttp

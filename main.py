@@ -68,7 +68,7 @@ async def slack_events(req: Request):
             for file in files:
                 if file.get("mimetype", "").startswith("audio/"):
                     file_url = file["url_private_download"]
-                    file_name = f"./tmp/{file['id']}.m4a"
+                    file_name = f"{file['id']}.m4a"
                     audio_file_path = file_name
 
                     # Download audio
@@ -110,3 +110,4 @@ async def slack_events(req: Request):
                 print(f"⚠️ No channel found for domain: {domain}")
 
     return JSONResponse(content={"ok": True})
+

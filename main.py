@@ -12,30 +12,30 @@ async def startup_event():
     print("🚀 Starting FastAPI + Scheduler")
     tz = pytz.timezone("Asia/Karachi")
 
-    # Mon–Thu → reminder 6 PM
+    # Tuesday → reminder at 1 PM (before 4 PM due)
     scheduler.add_job(
         send_daily_messages,
         trigger="cron",
-        day_of_week="mon-thu",
-        hour=20, minute=35,
+        day_of_week="tue",
+        hour=13, minute=0,
         timezone=tz
     )
 
-    # Friday → reminder 1 PM
+    # Friday → reminder at 9 PM (same day after 12 PM due)
     scheduler.add_job(
         send_daily_messages,
         trigger="cron",
         day_of_week="fri",
-        hour=16, minute=12,
+        hour=21, minute=0,
         timezone=tz
     )
+
     scheduler.start()
 
 
 @app.get("/")
 async def home():
     return {"message": "Slack bot running ✅"}
-
 
 @app.post("/slack/events")
 async def slack_events(req: Request):
@@ -46,29 +46,29 @@ async def slack_events(req: Request):
         return JSONResponse(content={"challenge": data["challenge"]})
 
     if "event" in data:
-        event_id = data.get("event_id")
         event = data["event"]
 
-        # 🔑 prevent duplicate processing
-        if event_id in processed_events:
+        # 🔑 Deduplication key (client_msg_id if present, otherwise timestamp)
+        msg_id = event.get("client_msg_id") or event.get("ts")
+        if msg_id in processed_events:
             return {"ok": True}
-        processed_events.add(event_id)
+        processed_events.add(msg_id)
 
-        # ignore bot/system messages
+        # 🚫 Ignore system/bot updates
         if event.get("subtype") in ["bot_message", "message_changed", "message_deleted"]:
             return JSONResponse(content={"ok": True})
 
         user = event.get("user")
         text = event.get("text")
 
-        # ✅ Check if audio file attached
+        # ✅ Handle audio file uploads
         files = event.get("files", [])
         audio_file_path = None
         if files:
             for file in files:
                 if file.get("mimetype", "").startswith("audio/"):
                     file_url = file["url_private_download"]
-                    file_name = f"{file['id']}.m4a"
+                    file_name = f"./tmp/{file['id']}.m4a"
                     audio_file_path = file_name
 
                     # Download audio
@@ -78,12 +78,12 @@ async def slack_events(req: Request):
                         text = await transcribe_audio(downloaded)
                         print(f"🎙️ Transcribed audio: {text}")
 
-        # Slack user info
+        # 🔎 Get Slack user info
         user_info = await client.users_info(user=user)
         email = user_info["user"]["profile"].get("email")
 
         if text and email:
-            # ✅ Employee record fetch
+            # Fetch employee record
             employee = get_employee_by_email(email)
             if not employee:
                 print(f"⚠️ No employee found for email: {email}")
@@ -92,22 +92,23 @@ async def slack_events(req: Request):
             name = employee["name"]
             domain = employee["domain"]
 
-            # ✅ Run chatbot
+            # Run chatbot
             structured_reply = await run_chatbot(text)
 
-            # ✅ Find Slack channel by domain
+            # Find Slack channel by domain
             channel_id = await get_channel_id(domain)
             if channel_id:
                 await client.chat_postMessage(
                     channel=channel_id,
                     text=f"*Message from {name} ({email}):*\n```{structured_reply}```"
                 )
+
+                # Cleanup audio file
                 if audio_file_path and os.path.exists(audio_file_path):
-                        os.remove(audio_file_path)
-                        print(f"🗑️ Deleted file: {audio_file_path}")
+                    os.remove(audio_file_path)
+                    print(f"🗑️ Deleted file: {audio_file_path}")
 
             else:
                 print(f"⚠️ No channel found for domain: {domain}")
 
     return JSONResponse(content={"ok": True})
-

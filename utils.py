@@ -138,7 +138,7 @@ async def run_chatbot(text: str,) -> str:
         • <milestone 2>  
         ...
 
-        ❓ **Questions for Eli / Stuck Items**  
+        ❓ Questions for Eli / Stuck Items  
     (💡 You can also mention Scott and I'll try to resolve it.)  
                         • <question 1>  
                         • <question 2>  
@@ -229,6 +229,7 @@ async def dm_by_email(email: str, text: str):
         await client.chat_postMessage(channel=channel_id, text=text)
     except SlackApiError as e:
         print("Slack error:", e.response.get("error"))
+
 
 
 

@@ -4,10 +4,17 @@ from slack_sdk.web.async_client import AsyncWebClient
 from slack_sdk.errors import SlackApiError
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
+from datetime import datetime
 import aiohttp
 import os
+import pytz
+from datetime import timedelta
+tz = pytz.timezone("Asia/Karachi")
 
 load_dotenv()
+
+# Fake in-memory DB for updates
+employee_updates = {}
 
 SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
 
@@ -60,6 +67,12 @@ raw_data = [
     ("muhammadjunaidakhter100@gmail.com", "M. Junaid", "testing-executive-updates")
 ]
 
+def record_employee_update(email: str):
+    """Mark that an employee submitted an update now."""
+    employee_updates[email] = {"last_update": datetime.now()}
+    print(f"✅ Update recorded for {email}")
+
+
 
 def get_all_employees():
     """Return all employees as list of dicts (full records)."""
@@ -73,6 +86,24 @@ def get_all_emails():
     """Return only employee emails as list of dicts."""
     emails = [{"email": email} for email, _, _ in raw_data]
     return emails
+
+async def send_followup_reminder(day: str):
+    print(f"⏰ Checking follow-up reminders for {day}...")
+    now = datetime.now(tz)
+
+    for emp in get_all_employees():
+        email = emp["email"]
+        name = emp["name"]
+
+        last_update = employee_updates.get(email, {}).get("last_update")
+
+        # Agar update missing hai ya due ke baad aya hai → send reminder
+        if not last_update or last_update < now - timedelta(hours=1):
+            await dm_by_email(
+                email,
+                f"⚠️ Hey {name}, we did not receive your update for {day}. "
+                "Please provide it as soon as possible."
+            )
 
 async def send_daily_messages():
     print("⏰ Sending daily messages...")
@@ -129,21 +160,14 @@ async def run_chatbot(text: str,) -> str:
 
     return response.content
 
-async def download_file(file_url: str, file_name: str) -> str:
+async def download_file(file_url: str, file_name: str):
     headers = {"Authorization": f"Bearer {SLACK_BOT_TOKEN}"}
-
-    # Ensure /tmp exists
-    tmp_dir = "/tmp"
-    os.makedirs(tmp_dir, exist_ok=True)
-
-    save_path = os.path.join(tmp_dir, file_name)
-
     async with aiohttp.ClientSession() as session:
         async with session.get(file_url, headers=headers) as resp:
             if resp.status == 200:
-                with open(save_path, "wb") as f:
+                with open(file_name, "wb") as f:
                     f.write(await resp.read())
-                return save_path
+                return file_name
             else:
                 print(f"⚠️ Failed to download file {file_url}, status={resp.status}")
                 return None
@@ -204,7 +228,6 @@ async def dm_by_email(email: str, text: str):
         await client.chat_postMessage(channel=channel_id, text=text)
     except SlackApiError as e:
         print("Slack error:", e.response.get("error"))
-
 
 
 

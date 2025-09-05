@@ -124,24 +124,25 @@ async def run_chatbot(text: str,) -> str:
 
         The format must follow this structure:
 
-        📋 Project Overview  
-        <one short paragraph summary>
+        📝 Summary of the Week's Activities
+            <one short paragraph summary>
 
-        🛠️ Key Tasks  
-        • <task 1>  
-        • <task 2>  
-        • <task 3>  
-        ...
+        ✅ Activities Completed (Since last update)
+                        • <task 1>  
+                        • <task 2>  
+                        • <task 3>  
+                        ...
 
-        📌 Upcoming Milestones  
+        🛠️ Activities to be Worked On (before next update) 
         • <milestone 1>  
         • <milestone 2>  
         ...
 
-        💡 Questions for Eli  
-        • <question 1>  
-        • <question 2>  
-        ...
+        ❓ **Questions for Eli / Stuck Items**  
+    (💡 You can also mention Scott and I'll try to resolve it.)  
+                        • <question 1>  
+                        • <question 2>  
+                        ...
 
         Rules:
         - Keep section headings exactly as shown above with emojis.
@@ -228,6 +229,7 @@ async def dm_by_email(email: str, text: str):
         await client.chat_postMessage(channel=channel_id, text=text)
     except SlackApiError as e:
         print("Slack error:", e.response.get("error"))
+
 
 
 

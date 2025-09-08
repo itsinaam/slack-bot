@@ -6,76 +6,50 @@ app = FastAPI()
 processed_events = set()
 
 
-# @app.on_event("startup")
-# async def startup_event():
-#     print("🚀 Starting FastAPI + Scheduler")
-#     tz = pytz.timezone("Asia/Karachi")
-
-#     # Tuesday → reminder at 1 PM
-#     scheduler.add_job(
-#         send_daily_messages,
-#         trigger="cron",
-#         day_of_week="tue",
-#         hour=13, minute=0,
-#         timezone=tz
-#     )
-
-#     # Friday → reminder at 9 PM
-#     scheduler.add_job(
-#         send_daily_messages,
-#         trigger="cron",
-#         day_of_week="fri",
-#         hour=21, minute=0,
-#         timezone=tz
-#     )
-
-#     # Tuesday → follow-up at 5 PM
-#     scheduler.add_job(
-#         send_followup_reminder,
-#         trigger="cron",
-#         day_of_week="tue",
-#         hour=17, minute=0,
-#         args=["Tuesday"],
-#         timezone=tz
-#     )
-
-#     # Saturday → follow-up at 1 AM (Friday’s missed update)
-#     scheduler.add_job(
-#         send_followup_reminder,
-#         trigger="cron",
-#         day_of_week="sat",
-#         hour=1, minute=0,
-#         args=["Friday"],
-#         timezone=tz
-#     )
-
-#     scheduler.start()
-
-
 @app.on_event("startup")
 async def startup_event():
     print("🚀 Starting FastAPI + Scheduler")
     tz = pytz.timezone("Asia/Karachi")
 
-    # Send reminder every 30 minutes
+    # Tuesday → reminder at 1 PM
     scheduler.add_job(
         send_daily_messages,
-        trigger="interval",
-        minutes=30,
+        trigger="cron",
+        day_of_week="tue",
+        hour=13, minute=0,
         timezone=tz
     )
 
-    # If you still want follow-up reminders every 30 minutes too:
+    # Friday → reminder at 9 PM
+    scheduler.add_job(
+        send_daily_messages,
+        trigger="cron",
+        day_of_week="fri",
+        hour=21, minute=0,
+        timezone=tz
+    )
+
+    # Tuesday → follow-up at 5 PM
     scheduler.add_job(
         send_followup_reminder,
-        trigger="interval",
-        minutes=30,
-        args=["General Followup"],
+        trigger="cron",
+        day_of_week="tue",
+        hour=17, minute=0,
+        args=["Tuesday"],
+        timezone=tz
+    )
+
+    # Saturday → follow-up at 1 AM (Friday’s missed update)
+    scheduler.add_job(
+        send_followup_reminder,
+        trigger="cron",
+        day_of_week="sat",
+        hour=1, minute=0,
+        args=["Friday"],
         timezone=tz
     )
 
     scheduler.start()
-
 
 
 
@@ -159,4 +133,5 @@ async def slack_events(req: Request):
                 print(f"⚠️ No channel found for domain: {domain}")
 
     return JSONResponse(content={"ok": True})
+
 

@@ -64,7 +64,8 @@ I'll automatically transcribe and format it into the sections below.
 
 raw_data = [
     ("scott@pladhomes.com", "Scott Impola", "testing-executive-updates"),
-    ("muhammadjunaidakhter100@gmail.com", "M. Junaid", "testing-executive-updates")
+    ("muhammadjunaidakhter100@gmail.com", "M. Junaid", "testing-executive-updates"),
+    ("info@pladhomes.com", "Pladhomes", "testing-executive-updates")
 ]
 
 def record_employee_update(email: str):
@@ -229,6 +230,7 @@ async def dm_by_email(email: str, text: str):
         await client.chat_postMessage(channel=channel_id, text=text)
     except SlackApiError as e:
         print("Slack error:", e.response.get("error"))
+
 
 
 

@@ -11,7 +11,7 @@ async def home():
     return {"message": "Slack bot running ✅"}
 
 # 🔹 Trigger route for daily reminders (Wed/Fri)
-@app.post("/trigger/daily-messages")
+@app.api_route("/trigger/daily-messages", methods=["GET", "POST"])
 async def trigger_daily_messages():
     await send_daily_messages()
     return {"status": "ok", "trigger": "daily-messages"}
@@ -92,3 +92,4 @@ async def slack_events(req: Request):
                 print(f"⚠️ No channel found for domain: {domain}")
 
     return JSONResponse(content={"ok": True})
+

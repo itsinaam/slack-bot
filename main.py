@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from utils import *
 
-app = FastAPI()
+# app = FastAPI()
 processed_events = set()
 
 @app.get("/")
@@ -92,4 +92,5 @@ async def slack_events(req: Request):
                 print(f"⚠️ No channel found for domain: {domain}")
 
     return JSONResponse(content={"ok": True})
+
 

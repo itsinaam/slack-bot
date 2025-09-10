@@ -1,15 +1,21 @@
 {
-    "version": 2,
-    "builds": [
-        {
-            "src": "./main.py",
-            "use": "@vercel/python"
-        }
-    ],
-    "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "/main.py"
-        }
-    ]
+  "version": 2,
+  "builds": [
+    {
+      "src": "./main.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/main.py"
+    }
+  ],
+  "cron": {
+    "wednesdayReminder": "35 16 * * 3",
+    "fridayReminder": "0 16 * * 5",
+    "tuesdayFollowup": "0 12 * * 2",
+    "saturdayFollowup": "0 20 * * 5"
+  }
 }
